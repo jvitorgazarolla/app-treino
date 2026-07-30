@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Hipertrofia — Split 5 Dias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#100F0D;
+    --surface:#1B1916;
+    --surface-2:#221F1B;
+    --border:#332F29;
+    --text:#F3EFE8;
+    --muted:#9A9285;
+    --muted-2:#6E685E;
+    --day1:#FF5C48; --day1-dim:#3A211C;
+    --day2:#3FC7BE; --day2-dim:#17302D;
+    --day3:#F2B134; --day3-dim:#382B12;
+    --day4:#9C7BFF; --day4-dim:#2A2340;
+    --day5:#B7E23A; --day5-dim:#2A3212;
+    --accent: var(--day1);
+    --accent-dim: var(--day1-dim);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(255,92,72,0.06), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:100px;
+  }
+  ::selection{ background:var(--accent); color:#100F0D; }
+
+  .app{ max-width:520px; margin:0 auto; min-height:100vh; position:relative; border-left:1px solid var(--border); border-right:1px solid var(--border); background:var(--bg); }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    padding:22px 20px 14px;
+    position:sticky; top:0; z-index:20;
+    background:rgba(16,15,13,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+  .brand-eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--muted-2); margin:0 0 2px;
+  }
+  .brand-title{
+    font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:0.03em; line-height:0.9; margin:0;
+    color:var(--text);
+  }
+  .week-progress{ text-align:right; }
+  .week-progress .num{ font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:var(--accent); transition:color .3s; }
+  .week-progress .lbl{ font-size:10px; color:var(--muted-2); text-transform:uppercase; letter-spacing:0.1em; }
+
+  /* ---- Day tabs ---- */
+  .day-tabs{
+    display:flex; gap:8px; overflow-x:auto; padding:14px 20px 4px; scrollbar-width:none;
+  }
+  .day-tabs::-webkit-scrollbar{ display:none; }
+  .day-tab{
+    flex:0 0 auto; display:flex; flex-direction:column; gap:2px; align-items:flex-start;
+    padding:9px 14px; border-radius:12px; border:1px solid var(--border); background:var(--surface);
+    cursor:pointer; transition:all .18s ease; min-width:92px;
+  }
+  .day-tab .d{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted-2); letter-spacing:.08em; }
+  .day-tab .g{ font-size:12.5px; font-weight:600; color:var(--muted); white-space:nowrap; }
+  .day-tab .dot{ width:7px; height:7px; border-radius:50%; margin-bottom:4px; }
+  .day-tab.active{ background:var(--accent-dim); border-color:var(--accent); }
+  .day-tab.active .g{ color:var(--text); }
+  .day-tab.active .d{ color:var(--accent); }
+
+  /* ---- Day header ---- */
+  .day-header{ padding:22px 20px 6px; }
+  .day-kicker{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:.1em; text-transform:uppercase; margin:0 0 4px; transition:color .3s;}
+  .day-title{ font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:.02em; margin:0; line-height:1; }
+  .day-sub{ color:var(--muted); font-size:13.5px; margin:6px 0 18px; line-height:1.5; }
+
+  .progress-wrap{ margin-bottom:6px; }
+  .progress-track{ height:6px; border-radius:99px; background:var(--surface-2); overflow:hidden; border:1px solid var(--border);}
+  .progress-fill{ height:100%; width:0%; background:var(--accent); transition:width .35s ease, background .3s; border-radius:99px; }
+  .progress-meta{ display:flex; justify-content:space-between; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted-2); }
+
+  .reset-btn{
+    margin-top:14px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.05em;
+    background:none; border:1px solid var(--border); color:var(--muted); padding:7px 12px; border-radius:8px; cursor:pointer;
+    text-transform:uppercase;
+  }
+  .reset-btn:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* ---- Muscle group section ---- */
+  .group{ padding:26px 20px 4px; }
+  .group-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  .group-title{ font-family:'Bebas Neue',sans-serif; font-size:21px; letter-spacing:.03em; color:var(--text); }
+  .group-note{ font-size:12.5px; color:var(--muted-2); line-height:1.5; margin:2px 0 16px; }
+
+  /* ---- Exercise card ---- */
+  .exercise{
+    background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    padding:14px 14px 12px; margin-bottom:10px; transition:border-color .2s;
+  }
+  .exercise.done{ border-color:var(--accent); }
+  .ex-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .ex-name{ font-size:14.5px; font-weight:600; color:var(--text); line-height:1.3; }
+  .ex-note{ font-size:11.5px; color:var(--muted-2); margin-top:3px; line-height:1.4; }
+  .ex-scheme{
+    font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:700; color:var(--accent);
+    white-space:nowrap; padding-top:1px; transition:color .3s;
+  }
+
+  .ex-bottom{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; gap:10px; }
+  .sets-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .set-dot{
+    width:26px; height:26px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2);
+    display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace;
+    font-size:10.5px; color:var(--muted-2); cursor:pointer; transition:all .15s ease; user-select:none;
+  }
+  .set-dot.checked{ background:var(--accent); border-color:var(--accent); color:#100F0D; font-weight:700; }
+
+  .rest-btn{
+    flex:0 0 auto; display:flex; align-items:center; gap:5px; background:var(--surface-2); border:1px solid var(--border);
+    color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:11px; padding:7px 10px; border-radius:8px; cursor:pointer;
+  }
+  .rest-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .rest-btn svg{ width:12px; height:12px; }
+
+  /* ---- Observations ---- */
+  .notes{ padding:30px 20px 10px; }
+  .notes-title{ font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.03em; margin:0 0 12px; }
+  .note-item{ border-top:1px solid var(--border); padding:13px 0; }
+  .note-item:last-child{ border-bottom:1px solid var(--border); }
+  .note-h{ font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .note-p{ font-size:12.5px; color:var(--muted); line-height:1.55; }
+
+  footer.credit{ text-align:center; padding:26px 20px 10px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted-2); letter-spacing:.06em; }
+
+  /* ---- Floating rest timer ---- */
+  .timer-bar{
+    position:fixed; left:50%; transform:translateX(-50%) translateY(140%); bottom:16px; z-index:50;
+    width:calc(100% - 32px); max-width:488px; background:var(--surface); border:1px solid var(--accent);
+    border-radius:16px; padding:14px 16px; display:flex; align-items:center; gap:14px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.5); transition:transform .32s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .timer-bar.show{ transform:translateX(-50%) translateY(0); }
+  .timer-ring{ position:relative; width:46px; height:46px; flex:0 0 auto; }
+  .timer-ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .timer-ring circle{ fill:none; stroke-width:4; }
+  .timer-ring .track{ stroke:var(--surface-2); }
+  .timer-ring .fill{ stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
+  .timer-num{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; }
+  .timer-info{ flex:1; }
+  .timer-label{ font-size:12.5px; font-weight:600; color:var(--text); }
+  .timer-sub{ font-size:11px; color:var(--muted-2); font-family:'JetBrains Mono',monospace; }
+  .timer-actions{ display:flex; gap:6px; }
+  .timer-btn{ background:var(--surface-2); border:1px solid var(--border); color:var(--muted); width:32px; height:32px; border-radius:9px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .timer-btn:hover{ color:var(--text); border-color:var(--accent); }
+
+  @media (prefers-reduced-motion: reduce){
+    .progress-fill, .timer-bar, .set-dot{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-row">
+      <div>
+        <p class="brand-eyebrow">Hipertrofia · split 5 dias</p>
+        <h1 class="brand-title">TREINO</h1>
+      </div>
+      <div class="week-progress">
+        <div class="num" id="weekPct">0%</div>
+        <div class="lbl">na semana</div>
+      </div>
+    </div>
+    <div class="day-tabs" id="dayTabs"></div>
+  </div>
+
+  <div class="day-header">
+    <p class="day-kicker" id="dayKicker">Dia 1</p>
+    <h2 class="day-title" id="dayTitle">Peito / Tríceps</h2>
+    <p class="day-sub" id="daySub"></p>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="dayFill"></div></div>
+      <div class="progress-meta">
+        <span id="dayFillLabel">0 / 0 séries</span>
+        <span id="dayFillPct">0%</span>
+      </div>
+    </div>
+    <button class="reset-btn" id="resetBtn">Zerar progresso do dia</button>
+  </div>
+
+  <div id="groupsContainer"></div>
+
+  <div class="notes">
+    <h3 class="notes-title">Observações do personal</h3>
+    <div class="note-item"><div class="note-h">Aquecimento</div><div class="note-p">8-10 min de aquecimento geral + específico antes do primeiro exercício pesado.</div></div>
+    <div class="note-item"><div class="note-h">Tempo de descanso</div><div class="note-p">Compostos: 3 séries, 2-3 min de descanso. Isoladores: 3 séries, 60-75s de descanso. Leve um cronômetro/app — é o que garante não estourar o tempo.</div></div>
+    <div class="note-item"><div class="note-h">Progressão de carga</div><div class="note-p">Aumente o peso quando conseguir bater o topo da faixa de repetições em todas as séries com boa execução.</div></div>
+    <div class="note-item"><div class="note-h">Descanso entre dias do mesmo grupo</div><div class="note-p">Mínimo de 48h para peito, costas, pernas e ombro.</div></div>
+    <div class="note-item"><div class="note-h">Sono e proteína</div><div class="note-p">7-8h de sono e cerca de 1,6-2,2g de proteína/kg de peso corporal por dia.</div></div>
+    <div class="note-item"><div class="note-h">Se sobrar tempo</div><div class="note-p">Priorize adicionar 1 série extra no exercício principal do dia em vez de mais um exercício novo — mantém o foco e não estoura o relógio.</div></div>
+    <div class="note-item"><div class="note-h">Ciclo</div><div class="note-p">Depois de 8-12 semanas, troque exercícios ou a ordem para evitar estagnação.</div></div>
+  </div>
+
+  <footer class="credit">DESCANSO — 2-3 MIN COMPOSTOS · 60-75S ISOLADORES · MÁX 90 MIN</footer>
+
+  <div class="timer-bar" id="timerBar">
+    <div class="timer-ring">
+      <svg viewBox="0 0 46 46">
+        <circle class="track" cx="23" cy="23" r="19"></circle>
+        <circle class="fill" id="timerCircle" cx="23" cy="23" r="19" stroke-dasharray="119.4" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="timer-num" id="timerNum">0:00</div>
+    </div>
+    <div class="timer-info">
+      <div class="timer-label" id="timerLabel">Descanso</div>
+      <div class="timer-sub" id="timerSub">contando...</div>
+    </div>
+    <div class="timer-actions">
+      <button class="timer-btn" id="timerAdd" title="+30s">+30</button>
+      <button class="timer-btn" id="timerClose" title="Fechar">✕</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DAYS = [
+  {
+    id:'d1', color:'day1', kicker:'Dia 1 · ~85 min', title:'Peito / Tríceps',
+    sub:'Versão enxuta para caber em 90 min. Base + porção superior + finalização de peito, e cabeça longa do tríceps.',
+    groups:[
+      { name:'Peito', note:'', exercises:[
+        {name:'Supino reto com barra', scheme:'3x6-8', note:'Base, porção média', sets:3, compound:true, rest:150},
+        {name:'Supino inclinado com halteres', scheme:'3x8-10', note:'Porção superior', sets:3, compound:true, rest:150},
+        {name:'Crucifixo inclinado com halteres ou cabo', scheme:'3x12-15', note:'Alongamento/estiramento', sets:3, rest:70},
+        {name:'Crossover ou peck deck', scheme:'3x12-15', note:'Finalização, inner range', sets:3, rest:70},
+      ]},
+      { name:'Tríceps', note:'', exercises:[
+        {name:'Tríceps testa com barra EZ', scheme:'3x8-10', note:'Cabeça longa', sets:3, compound:true, rest:150},
+        {name:'Tríceps corda na polia', scheme:'3x10-12', note:'', sets:3, rest:70},
+        {name:'Mergulho no banco ou paralelas', scheme:'2x falha', note:'', sets:2, rest:70},
+      ]},
+    ]
+  },
+  {
+    id:'d2', color:'day2', kicker:'Dia 2 · ~85 min', title:'Costas / Bíceps',
+    sub:'Versão enxuta para caber em 90 min. Largura e espessura de costas, mais bíceps direto.',
+    groups:[
+      { name:'Costas', note:'', exercises:[
+        {name:'Barra fixa ou puxada frontal', scheme:'3x8-10', note:'Largura', sets:3, compound:true, rest:150},
+        {name:'Remada curvada com barra ou remada cavalinho', scheme:'3x8-10', note:'Espessura', sets:3, compound:true, rest:150},
+        {name:'Remada unilateral com halter (serrote)', scheme:'3x10-12', note:'', sets:3, rest:70},
+        {name:'Pulldown com braços estendidos ou pulley baixo', scheme:'2x12-15', note:'Isolamento dorsal', sets:2, rest:70},
+        {name:'Hiperextensão lombar', scheme:'2x12-15', note:'', sets:2, rest:70},
+      ]},
+      { name:'Bíceps', note:'', exercises:[
+        {name:'Rosca direta com barra', scheme:'3x8-10', note:'', sets:3, rest:70},
+        {name:'Rosca martelo', scheme:'2x10-12', note:'', sets:2, rest:70},
+      ]},
+    ]
+  },
+  {
+    id:'d3', color:'day3', kicker:'Dia 3 · ~90 min', title:'Pernas (completo)',
+    sub:'Quadríceps, posterior de coxa, glúteo e panturrilha. Cadeira abdutora e afundo ficam de fora nesse formato enxuto — se sobrar tempo, entram como extra opcional.',
+    groups:[
+      { name:'Pernas', note:'', exercises:[
+        {name:'Agachamento livre com barra', scheme:'3x6-8', note:'Base', sets:3, compound:true, rest:150},
+        {name:'Leg press 45°', scheme:'3x10-12', note:'', sets:3, compound:true, rest:150},
+        {name:'Cadeira extensora', scheme:'3x12-15', note:'', sets:3, rest:70},
+        {name:'Stiff com barra ou halteres', scheme:'3x8-10', note:'Posterior/glúteo', sets:3, compound:true, rest:150},
+        {name:'Mesa flexora', scheme:'2x12-15', note:'', sets:2, rest:70},
+        {name:'Panturrilha em pé', scheme:'3x15-20', note:'', sets:3, rest:70},
+        {name:'Panturrilha sentado', scheme:'2x15-20', note:'', sets:2, rest:70},
+      ]},
+    ]
+  },
+  {
+    id:'d4', color:'day4', kicker:'Dia 4 · ~80 min', title:'Ombros / Trapézio',
+    sub:'Versão enxuta para caber em 90 min. Deltoide anterior, lateral, posterior + trapézio.',
+    groups:[
+      { name:'Ombro e Trapézio', note:'', exercises:[
+        {name:'Desenvolvimento militar com barra ou halteres', scheme:'3x6-10', note:'Deltoide anterior', sets:3, compound:true, rest:150},
+        {name:'Elevação lateral com halteres', scheme:'3x12-15', note:'Deltoide lateral', sets:3, rest:70},
+        {name:'Crucifixo invertido ou peck deck reverso', scheme:'3x12-15', note:'Deltoide posterior', sets:3, rest:70},
+        {name:'Face pull na polia', scheme:'2x15', note:'Deltoide posterior/saúde do ombro', sets:2, rest:70},
+        {name:'Encolhimento de ombros', scheme:'3x10-12', note:'Trapézio', sets:3, rest:70},
+      ]},
+    ]
+  },
+  {
+    id:'d5', color:'day5', kicker:'Dia 5 · ~75 min', title:'Braços + Panturrilha/Abdômen',
+    sub:'Versão enxuta para caber em 90 min. Finalização de braços, abdômen e a segunda dose de panturrilha da semana.',
+    groups:[
+      { name:'Braços', note:'', exercises:[
+        {name:'Rosca 21 (barra)', scheme:'2x21', note:'', sets:2, rest:70},
+        {name:'Tríceps na polia com corda', scheme:'3x12-15', note:'', sets:3, rest:70},
+        {name:'Rosca concentrada', scheme:'2x12', note:'Cada braço', sets:2, rest:70},
+        {name:'Tríceps francês ou coice', scheme:'2x12-15', note:'', sets:2, rest:70},
+      ]},
+      { name:'Abdômen', note:'', exercises:[
+        {name:'Abdominal na polia alta ou elevação de pernas', scheme:'3x12-15', note:'', sets:3, rest:70},
+        {name:'Prancha', scheme:'2x40-60s', note:'Isometria', sets:2, rest:70},
+      ]},
+      { name:'Panturrilha', note:'', exercises:[
+        {name:'Panturrilha no leg press', scheme:'3x15-20', note:'', sets:3, rest:70},
+      ]},
+    ]
+  },
+];
+
+const STORAGE_KEY = 'hipertrofia-app-progress-v2';
+let progress = {};
+try{ progress = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ progress = {}; }
+
+let currentDay = 0;
+let timerInterval = null;
+let timerState = { total:0, remaining:0, label:'' };
+
+function saveProgress(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }catch(e){}
+}
+
+function exKey(dayId, groupIdx, exIdx){ return dayId+':'+groupIdx+':'+exIdx; }
+
+function getChecked(key, totalSets){
+  if(!progress[key]) progress[key] = new Array(totalSets).fill(false);
+  return progress[key];
+}
+
+function renderTabs(){
+  const wrap = document.getElementById('dayTabs');
+  wrap.innerHTML = '';
+  DAYS.forEach((day, i)=>{
+    const el = document.createElement('div');
+    el.className = 'day-tab' + (i===currentDay ? ' active':'');
+    el.innerHTML = `<span class="dot" style="background:var(--${day.color})"></span><span class="d">${day.kicker}</span><span class="g">${day.title.split(' / ')[0].split(' + ')[0]}</span>`;
+    el.addEventListener('click', ()=>{ currentDay = i; renderAll(); });
+    wrap.appendChild(el);
+  });
+}
+
+function dayTotals(day){
+  let total = 0, done = 0;
+  day.groups.forEach((g, gi)=>{
+    g.exercises.forEach((ex, ei)=>{
+      const key = exKey(day.id, gi, ei);
+      const arr = getChecked(key, ex.sets);
+      total += ex.sets;
+      done += arr.filter(Boolean).length;
+    });
+  });
+  return {total, done};
+}
+
+function weekTotals(){
+  let total=0, done=0;
+  DAYS.forEach(day=>{ const t = dayTotals(day); total+=t.total; done+=t.done; });
+  return {total, done};
+}
+
+function renderDayHeader(day){
+  document.documentElement.style.setProperty('--accent', `var(--${day.color})`);
+  document.documentElement.style.setProperty('--accent-dim', `var(--${day.color}-dim)`);
+  document.getElementById('dayKicker').textContent = day.kicker;
+  document.getElementById('dayTitle').textContent = day.title;
+  document.getElementById('daySub').textContent = day.sub;
+  const {total, done} = dayTotals(day);
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('dayFill').style.width = pct + '%';
+  document.getElementById('dayFillLabel').textContent = `${done} / ${total} séries`;
+  document.getElementById('dayFillPct').textContent = pct + '%';
+
+  const wk = weekTotals();
+  const wkPct = wk.total ? Math.round((wk.done/wk.total)*100) : 0;
+  document.getElementById('weekPct').textContent = wkPct + '%';
+}
+
+function renderGroups(day){
+  const container = document.getElementById('groupsContainer');
+  container.innerHTML = '';
+  day.groups.forEach((g, gi)=>{
+    const section = document.createElement('div');
+    section.className = 'group';
+    section.innerHTML = `<div class="group-head"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span><span class="group-title">${g.name}</span></div>` +
+      (g.note ? `<p class="group-note">${g.note}</p>` : '<div style="height:14px"></div>');
+    const list = document.createElement('div');
+
+    g.exercises.forEach((ex, ei)=>{
+      const key = exKey(day.id, gi, ei);
+      const arr = getChecked(key, ex.sets);
+      const card = document.createElement('div');
+      card.className = 'exercise' + (arr.every(Boolean) ? ' done':'');
+
+      const dotsHtml = arr.map((checked, si)=>`<div class="set-dot${checked?' checked':''}" data-key="${key}" data-si="${si}">${si+1}</div>`).join('');
+      const restLabel = ex.rest >= 60 ? `${Math.floor(ex.rest/60)}:${String(ex.rest%60).padStart(2,'0')}` : `${ex.rest}s`;
+
+      card.innerHTML = `
+        <div class="ex-top">
+          <div>
+            <div class="ex-name">${ex.name}</div>
+            ${ex.note ? `<div class="ex-note">${ex.note}</div>` : ''}
+          </div>
+          <div class="ex-scheme">${ex.scheme}</div>
+        </div>
+        <div class="ex-bottom">
+          <div class="sets-row">${dotsHtml}</div>
+          <button class="rest-btn" data-rest="${ex.rest}" data-label="${ex.name}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            ${restLabel}
+          </button>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+    section.appendChild(list);
+    container.appendChild(section);
+  });
+
+  container.querySelectorAll('.set-dot').forEach(dot=>{
+    dot.addEventListener('click', ()=>{
+      const key = dot.dataset.key;
+      const si = parseInt(dot.dataset.si, 10);
+      progress[key][si] = !progress[key][si];
+      saveProgress();
+      renderAll();
+    });
+  });
+
+  container.querySelectorAll('.rest-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      startTimer(parseInt(btn.dataset.rest,10), btn.dataset.label);
+    });
+  });
+}
+
+function renderAll(){
+  renderTabs();
+  renderDayHeader(DAYS[currentDay]);
+  renderGroups(DAYS[currentDay]);
+}
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  const day = DAYS[currentDay];
+  day.groups.forEach((g, gi)=>{
+    g.exercises.forEach((ex, ei)=>{
+      progress[exKey(day.id, gi, ei)] = new Array(ex.sets).fill(false);
+    });
+  });
+  saveProgress();
+  renderAll();
+});
+
+/* ---- Timer ---- */
+const timerBar = document.getElementById('timerBar');
+const timerCircle = document.getElementById('timerCircle');
+const timerNum = document.getElementById('timerNum');
+const timerLabel = document.getElementById('timerLabel');
+const timerSub = document.getElementById('timerSub');
+const CIRC = 2 * Math.PI * 19;
+timerCircle.setAttribute('stroke-dasharray', CIRC.toFixed(1));
+
+function startTimer(seconds, label){
+  clearInterval(timerInterval);
+  timerState.total = seconds;
+  timerState.remaining = seconds;
+  timerState.label = label;
+  timerLabel.textContent = label;
+  updateTimerUI();
+  timerBar.classList.add('show');
+  timerInterval = setInterval(()=>{
+    timerState.remaining -= 1;
+    if(timerState.remaining <= 0){
+      timerState.remaining = 0;
+      updateTimerUI();
+      clearInterval(timerInterval);
+      timerSub.textContent = 'descanso concluído';
+      if(navigator.vibrate) navigator.vibrate([120,60,120]);
+      return;
+    }
+    updateTimerUI();
+  }, 1000);
+}
+
+function updateTimerUI(){
+  const {remaining, total} = timerState;
+  const m = Math.floor(remaining/60);
+  const s = remaining%60;
+  timerNum.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  timerSub.textContent = remaining>0 ? 'contando...' : 'descanso concluído';
+  const frac = total ? remaining/total : 0;
+  timerCircle.setAttribute('stroke-dashoffset', (CIRC * (1-frac)).toFixed(1));
+}
+
+document.getElementById('timerAdd').addEventListener('click', ()=>{
+  timerState.remaining += 30;
+  timerState.total = Math.max(timerState.total, timerState.remaining);
+  updateTimerUI();
+});
+document.getElementById('timerClose').addEventListener('click', ()=>{
+  clearInterval(timerInterval);
+  timerBar.classList.remove('show');
+});
+
+renderAll();
+</script>
+</body>
+</html>
